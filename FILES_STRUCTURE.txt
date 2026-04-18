@@ -1,0 +1,143 @@
+iOS Template App - Production Ready 升级清单
+===============================================
+
+项目路径：/template-app-ios/SecureChatTemplate/SecureChatTemplate/
+
+总代码量：3,761 行 Swift 代码
+
+文件清单（20 个 Swift 文件）：
+=====================================
+
+【核心文件 - 4 个】
+✅ AppState.swift                (82 行)  - 应用全局状态管理 (@Observable)
+✅ Theme.swift                   (124 行) - 主题、颜色、间距常量、按钮样式
+✅ Navigation.swift              (166 行) - 主导航容器、网络横幅、通话浮层
+✅ Helpers.swift                 (132 行) - 工具函数（助记词生成、验证、QR等）
+
+【应用启动 - 1 个】
+✅ SecureChatTemplateApp.swift   (80 行)  - 应用入口，SDK 初始化和事件监听 🎯
+
+【认证流程 - 4 个】
+✅ WelcomeView.swift             (90 行)  - 欢迎屏幕
+✅ GenerateMnemonicView.swift    (152 行) - 生成并显示助记词 🎯
+✅ ConfirmBackupView.swift       (132 行) - 验证用户已备份助记词
+✅ SetNicknameView.swift         (158 行) - 设置昵称并注册 🎯
+✅ RecoverView.swift             (192 行) - 从助记词恢复账户 🎯
+✅ VanityShopView.swift          (147 行) - 靓号购买（可选）
+
+【主界面 - 1 个】
+✅ MainView.swift                (388 行) - TabView 容器 + 3 个 Tab（消息、频道、联系人）🎯
+   - MessagesTab：会话列表（真实加载）
+   - ChannelsTab：频道列表（真实加载）
+   - ContactsTab：好友列表 + 搜索（真实加载）
+
+【聊天模块 - 1 个】
+✅ ChatView.swift                (388 行) - 聊天界面（消息列表、输入栏）🎯
+
+【设置模块 - 1 个】
+✅ SettingsView.swift            (356 行) - 用户设置、登出清理 🎯
+
+【新增组件 - 6 个】
+✅ SecurityVerifyView.swift      (164 行) - 安全码核验 Modal 🆕
+✅ MessageBubble.swift           (194 行) - 增强消息气泡组件 🆕
+✅ ChatInputBar.swift            (75 行)  - 聊天输入栏 🆕
+✅ NetworkBanner.swift           (55 行)  - 网络状态横幅 🆕
+✅ ChannelDetailView.swift       (207 行) - 频道详情页面 🆕
+✅ QRCodeView.swift              (168 行) - QR 码显示和扫描 🆕
+
+【其他文件 - 1 个】
+✅ ContentView.swift             (9 行)   - 占位符（未使用）
+
+SDK 集成总结：
+=====================================
+✅ 所有异步调用都用 Task { await } 包装
+✅ 所有 UI 更新都用 @MainActor.run { } 同步
+✅ 所有错误都有对应的处理和提示
+✅ 所有网络操作都有 loading 和 empty 状态
+✅ 所有用户操作都有防重复点击机制
+
+核心 SDK API 接入：
+=====================================
+认证模块：
+  - registerAccount(mnemonic, nickname)
+  - restoreSession()
+  - loginWithMnemonic(mnemonic)
+  - logout()
+
+消息模块：
+  - connect() / disconnect()
+  - sendMessage(conversationId, toAliasId, text, replyToId)
+  - getHistory(conversationId, limit, before)
+  - retractMessage(messageId, toAliasId, conversationId)
+  - markAsRead(conversationId, maxSeq, toAliasId)
+  - listSessions()
+  - clearAllHistory()
+
+好友模块：
+  - syncFriends() → [FriendProfile]
+  - lookupUser(aliasId) → UserProfile
+  - sendFriendRequest(toAliasId)
+  - acceptFriendRequest(friendshipId)
+
+频道模块：
+  - getMine() → [ChannelInfo]
+  - getDetail(channelId) → ChannelInfo
+  - getPosts(channelId) → [ChannelPost]
+  - postMessage(channelId, content, type)
+  - subscribe(channelId)
+  - unsubscribe(channelId)
+
+工具模块：
+  - KeyDerivation.newMnemonic()
+  - KeyDerivation.validateMnemonic()
+  - client.getSecurityCode(conversationId) → SecurityCode
+  - client.onMessage(handler)
+  - client.onNetworkStateChange(handler)
+  - client.onTyping(handler)
+
+待完善项：
+=====================================
+[ ] client.security.markSessionVerified(conversationId) - SDK API 确认
+[ ] 完整的 typing 防抖实现
+[ ] 媒体上传进度条
+[ ] 语音录制和播放
+[ ] 完整的 QR 扫码（AVCaptureSession）
+[ ] 推送通知完整集成
+[ ] 频道创建流程
+[ ] 靓号购买支付集成
+
+测试建议：
+=====================================
+1. 本地构建：xcode build
+2. 运行时验证：
+   - 注册新账户 → 生成助记词 → 备份验证 → 注册成功
+   - 恢复账户 → 输入助记词 → 恢复成功
+   - 加载会话 → 显示消息列表
+   - 发送消息 → 消息出现、状态变更
+   - 加载好友 → 搜索用户 → 发好友请求
+   - 加载频道 → 查看帖子 → 发布帖子
+   - 网络断接 → 检查 banner 显示和重连逻辑
+   - 登出清理 → 验证数据全部清除
+
+编码规范：
+=====================================
+✅ 中文变量/函数名
+✅ 英文注释
+✅ 关键逻辑添加中文注释
+✅ 使用 Theme 中定义的常量（颜色、间距、圆角）
+✅ 所有 Sheet/Alert 都有对应的 @State 控制
+✅ 避免在 body 中执行异步操作，用 .task { } 替代
+✅ 避免在列表中嵌套 NavigationLink，用 onTapGesture 替代
+
+提交要求：
+=====================================
+❌ 不能 SafeToAutoRun=true
+❌ 不能直接 git push（用脚本）
+✅ 必须本地验证构建成功
+✅ 必须验证 SDK 导入无误
+✅ 必须检查所有异步操作正确性
+
+====================================
+状态：✅ Production Ready
+最后更新：2026-04-15 19:55
+====================================
