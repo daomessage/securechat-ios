@@ -12,66 +12,63 @@ struct WelcomeView: View {
     @State var appState: AppState
 
     var body: some View {
-        VStack(spacing: Spacing32) {
-            // Logo 区域
-            VStack(spacing: Spacing16) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: RadiusXL)
-                        .fill(BlueAccent.opacity(0.15))
+        // 品牌渐变 · blue-400 → violet-400 → purple-400 (对齐 PWA / Android)
+        let titleGradient = LinearGradient(
+            colors: [
+                Color(red: 96/255, green: 165/255, blue: 250/255),    // blue-400
+                Color(red: 167/255, green: 139/255, blue: 250/255),   // violet-400
+                Color(red: 192/255, green: 132/255, blue: 252/255),   // purple-400
+            ],
+            startPoint: .leading,
+            endPoint: .trailing
+        )
 
-                    Image(systemName: "lock.shield.fill")
-                        .font(.system(size: 40, weight: .semibold))
-                        .foregroundColor(BlueAccent)
-                }
-                .frame(width: 80, height: 80)
+        VStack(spacing: Spacing.s8) {
+            Spacer()
 
-                VStack(spacing: Spacing8) {
-                    Text("DAO MESSAGE")
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundColor(TextPrimary)
-
-                    Text("Your keys. Your privacy.\nEnd-to-end encrypted.")
-                        .font(.system(size: 15))
-                        .foregroundColor(TextMuted)
-                        .multilineTextAlignment(.center)
-                        .lineSpacing(2)
-                }
+            // 标题区 (gradient 文字代替老的 Logo 盒, 对齐 PWA/Android)
+            VStack(spacing: Spacing.s4) {
+                Text("DAO Message")
+                    .font(.system(size: TextSize.xl4, weight: .bold))
+                    .foregroundStyle(titleGradient)
+                Text("零知识端到端加密通讯 · 由你掌控的去中心化即时通讯")
+                    .font(.system(size: TextSize.sm))
+                    .foregroundColor(TextMutedLight)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(4)
+                    .padding(.horizontal, Spacing.s4)
             }
+
+            // 按钮组
+            VStack(spacing: Spacing.s3) {
+                Button(action: {
+                    _ = generateMnemonic()
+                    appState.route = .generateMnemonic
+                }) {
+                    Text("创建新账户")
+                        .font(.system(size: TextSize.base, weight: .medium))
+                }
+                .primaryButton()
+                .frame(height: 48)
+
+                Button(action: { appState.route = .recover }) {
+                    Text("恢复已有账户")
+                        .font(.system(size: TextSize.base, weight: .medium))
+                }
+                .secondaryButton()
+                .frame(height: 48)
+            }
+            .padding(.top, Spacing.s6)
 
             Spacer()
 
-            // 按钮组
-            VStack(spacing: Spacing12) {
-                // 新建账户
-                Button(action: {
-                    // 生成新助记词并跳转
-                    let mnemonic = generateMnemonic()
-                    appState.route = .generateMnemonic
-                    // 临时保存助记词（实际应该在状态管理器中）
-                }) {
-                    Text("新建账户")
-                        .font(.system(size: 16, weight: .semibold))
-                }
-                .primaryButton()
-                .frame(height: Theme.buttonHeight)
-
-                // 恢复账户
-                Button(action: {
-                    appState.route = .recover
-                }) {
-                    Text("从助记词恢复")
-                        .font(.system(size: 16, weight: .semibold))
-                }
-                .secondaryButton()
-                .frame(height: Theme.buttonHeight)
-            }
-
             // 版本号
-            Text("v1.0.0 · Powered by DAO MESSAGE")
-                .font(.system(size: 12, weight: .regular))
+            Text("v1.0 · 由 DAO MESSAGE 协议驱动")
+                .font(.system(size: TextSize.xs))
                 .foregroundColor(TextMuted)
+                .padding(.bottom, Spacing.s6)
         }
-        .padding(Spacing40)
+        .padding(Spacing.s6)
         .appBackground()
     }
 

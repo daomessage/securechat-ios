@@ -125,8 +125,8 @@ enum TextSize {
 
 struct Theme {
     static let cornerRadius = RadiusMedium
-    static let buttonHeight = 52.0
-    static let inputHeight = 44.0
+    static let buttonHeight = 48.0      // 对齐 design tokens h.button = 48
+    static let inputHeight = 48.0       // 同上 · input 也统一 48
 
     /// 标准按钮样式
     static func buttonStyle(
@@ -140,17 +140,21 @@ struct Theme {
 
 // MARK: - View Modifiers
 
+// Primary / Secondary / Danger Button · 对齐 docs/DESIGN_TOKENS.md
+//   h=48, radius.lg=8, bg=BrandPrimary #3B82F6
+//   字号 16 / 字重 medium (比原 semibold 轻一档, 和 Android/PWA 一致)
+
 struct PrimaryButtonStyle: ButtonStyle {
     var isEnabled = true
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 16, weight: .semibold))
+            .font(.system(size: TextSize.base, weight: .medium))
             .frame(maxWidth: .infinity)
             .frame(height: Theme.buttonHeight)
             .foregroundColor(TextPrimary)
-            .background(BlueAccent.opacity(isEnabled ? 1 : 0.5))
-            .cornerRadius(RadiusMedium)
+            .background(BrandPrimary.opacity(isEnabled ? 1 : 0.5))
+            .cornerRadius(Radius.lg)
             .opacity(configuration.isPressed ? 0.8 : 1)
     }
 }
@@ -158,15 +162,25 @@ struct PrimaryButtonStyle: ButtonStyle {
 struct SecondaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 16, weight: .semibold))
+            .font(.system(size: TextSize.base, weight: .medium))
             .frame(maxWidth: .infinity)
             .frame(height: Theme.buttonHeight)
             .foregroundColor(TextPrimary)
-            .background(Color.clear)
-            .overlay(
-                RoundedRectangle(cornerRadius: RadiusMedium)
-                    .stroke(Surface2, lineWidth: 1)
-            )
+            .background(Surface2)
+            .cornerRadius(Radius.lg)
+            .opacity(configuration.isPressed ? 0.8 : 1)
+    }
+}
+
+struct DangerButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: TextSize.base, weight: .medium))
+            .frame(maxWidth: .infinity)
+            .frame(height: Theme.buttonHeight)
+            .foregroundColor(TextPrimary)
+            .background(DangerColor)
+            .cornerRadius(Radius.lg)
             .opacity(configuration.isPressed ? 0.8 : 1)
     }
 }
@@ -180,6 +194,10 @@ extension View {
 
     func secondaryButton() -> some View {
         buttonStyle(SecondaryButtonStyle())
+    }
+
+    func dangerButton() -> some View {
+        buttonStyle(DangerButtonStyle())
     }
 
     /// 添加通用背景和安全区域处理
