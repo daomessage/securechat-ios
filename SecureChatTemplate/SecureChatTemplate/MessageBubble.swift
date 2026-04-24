@@ -64,28 +64,43 @@ struct MessageBubble: View {
                 case "voice":
                     VoiceMessagePlayer(message: message, isMe: message.isMe)
                 case "file":
-                    // 文件消息
-                    HStack(spacing: Spacing8) {
+                    // 文件消息 · 同文本气泡样式 (BrandPrimary / Surface2 + 下方尖角)
+                    HStack(spacing: Spacing.s2) {
                         Image(systemName: "doc")
                             .font(.system(size: 12))
-                            .foregroundColor(message.isMe ? TextPrimary : TextPrimary)
+                            .foregroundColor(TextPrimary)
                         Text(message.caption ?? "文件")
                             .font(.system(size: 13))
-                            .foregroundColor(message.isMe ? TextPrimary : TextPrimary)
+                            .foregroundColor(TextPrimary)
                     }
-                    .padding(.horizontal, Spacing12)
-                    .padding(.vertical, Spacing8)
-                    .background(message.isMe ? BlueAccent : Surface1)
-                    .cornerRadius(12)
+                    .padding(.horizontal, Spacing.s4)
+                    .padding(.vertical, Spacing.s3)
+                    .background(message.isMe ? BrandPrimary : Surface2)
+                    .clipShape(
+                        UnevenRoundedRectangle(cornerRadii: .init(
+                            topLeading: 16,
+                            bottomLeading: message.isMe ? 16 : 4,
+                            bottomTrailing: message.isMe ? 4 : 16,
+                            topTrailing: 16
+                        ))
+                    )
                 case "text", "":
-                    // 文本消息
+                    // 文本消息 · design tokens: px=16 py=12, 气泡圆角 16 + 尖角方向 4
+                    // 自己消息右下尖 (bottomTrailing=4), 对方左下尖 (bottomLeading=4)
                     Text(message.text)
                         .font(.system(size: 15))
-                        .foregroundColor(message.isMe ? TextPrimary : TextPrimary)
-                        .padding(.horizontal, Spacing12)
-                        .padding(.vertical, Spacing8)
-                        .background(message.isMe ? BlueAccent : Surface1)
-                        .cornerRadius(12)
+                        .foregroundColor(TextPrimary)
+                        .padding(.horizontal, Spacing.s4)
+                        .padding(.vertical, Spacing.s3)
+                        .background(message.isMe ? BrandPrimary : Surface2)
+                        .clipShape(
+                            UnevenRoundedRectangle(cornerRadii: .init(
+                                topLeading: 16,
+                                bottomLeading: message.isMe ? 16 : 4,
+                                bottomTrailing: message.isMe ? 4 : 16,
+                                topTrailing: 16
+                            ))
+                        )
                 default:
                     // 未知消息类型 — 协议降级提示（§4.2）
                     VStack(alignment: .leading, spacing: 4) {
