@@ -366,3 +366,150 @@ private final class PeerDelegate: NSObject, RTCPeerConnectionDelegate {
     func peerConnection(_ peerConnection: RTCPeerConnection, didOpen dataChannel: RTCDataChannel) {}
 }
 #endif
+
+// MARK: - CallScreenView (SwiftUI)
+//
+// P2-2 · 对齐 PWA CallScreen.tsx / Android CallScreen.kt
+// 放在 CallManager.swift 内, 避免新增 .swift 文件需手工 Add to Target
+//
+// 调用方式: 在 MainView / ContentView 根据 callManager.state ≠ .idle 显示为浮层
+//   if callManager.state != .idle {
+//     CallScreenView(callManager: callManager)
+//   }
+
+import SwiftUI
+
+struct CallScreenView: View {
+    @Bindable var callManager: CallManager
+
+    private var remoteAlias: String {
+        callManager.info?.remoteAlias ?? "未知联系人"
+    }
+
+    private var isVideo: Bool {
+        callManager.info?.mode == .video
+    }
+
+    private var stateLabel: String {
+        switch callManager.state {
+        case .idle:       return ""
+        case .outgoing:   return "正在呼叫…"
+        case .incoming:   return "来电呼入"
+        case .connecting: return "正在建立加密通道…"
+        case .connected:  return "通话中"
+        case .ended:      return "通话已结束"
+        }
+    }
+
+    @State private var durationSec: Int = 0
+
+    var body: some View {
+        ZStack {
+            // 背景 · 连接后全屏远端视频 (视频模式), 音频模式用纯色背景
+            DarkBg.ignoresSafeArea()
+
+            // TODO: 视频模式接通后, 此处绘制 remoteVideoTrackForRender (需 UIViewRepresentable 包裹 RTCMTLVideoView)
+
+            VStack {
+                // 顶部 · 对方信息
+                VStack(spacing: Spacing.s3) {
+                    Avatar(text: remoteAlias, size: .lg)
+
+                    Text(remoteAlias)
+                        .font(.system(size: TextSize.xl, weight: .semibold))
+                        .foregroundColor(TextPrimary)
+
+                    if callManager.state == .connected {
+                        Text(formatDuration(durationSec))
+                            .font(.system(size: TextSize.sm, design: .monospaced))
+                            .foregroundColor(SuccessText)
+
+                        Text("🔒 端到端加密通话")
+                            .font(.system(size: TextSize.xs))
+                            .padding(.horizontal, Spacing.s2)
+                            .padding(.vertical, 4)
+                            .overlay(
+                                Capsule().stroke(SuccessText.opacity(0.4), lineWidth: 1)
+                            )
+                            .foregroundColor(SuccessText)
+                    } else {
+                        Text(stateLabel)
+                            .font(.system(size: TextSize.sm))
+                            .foregroundColor(BrandPrimaryText)
+                    }
+                }
+                .padding(.top, 80)
+
+                Spacer()
+
+                // 底部控制栏
+                HStack(spacing: Spacing.s6) {
+                    if callManager.state == .incoming {
+                        // 来电: 拒绝 + 接听
+                        Button(action: { callManager.reject() }) {
+                            Image(systemName: "phone.down.fill")
+                                .font(.system(size: 24))
+                                .foregroundColor(.white)
+                                .frame(width: 64, height: 64)
+                                .background(Circle().fill(DangerColor))
+                        }
+
+                        Button(action: { callManager.answer() }) {
+                            Image(systemName: "phone.fill")
+                                .font(.system(size: 24))
+                                .foregroundColor(.white)
+                                .frame(width: 64, height: 64)
+                                .background(Circle().fill(SuccessColor))
+                        }
+                    } else {
+                        // 通话中: 静音 + 挂断 + 摄像头(仅视频)
+                        Button(action: { callManager.toggleMic() }) {
+                            Image(systemName: callManager.micMuted ? "mic.slash.fill" : "mic.fill")
+                                .font(.system(size: 22))
+                                .foregroundColor(.white)
+                                .frame(width: 56, height: 56)
+                                .background(Circle().fill(callManager.micMuted ? DangerColor.opacity(0.8) : Surface2))
+                        }
+
+                        Button(action: { callManager.hangup() }) {
+                            Image(systemName: "phone.down.fill")
+                                .font(.system(size: 26))
+                                .foregroundColor(.white)
+                                .frame(width: 64, height: 64)
+                                .background(Circle().fill(DangerColor))
+                        }
+
+                        if isVideo {
+                            Button(action: { callManager.toggleCamera() }) {
+                                Image(systemName: callManager.cameraMuted ? "video.slash.fill" : "video.fill")
+                                    .font(.system(size: 22))
+                                    .foregroundColor(.white)
+                                    .frame(width: 56, height: 56)
+                                    .background(Circle().fill(callManager.cameraMuted ? DangerColor.opacity(0.8) : Surface2))
+                            }
+                        }
+                    }
+                }
+                .padding(.bottom, 64)
+            }
+        }
+        .onChange(of: callManager.state) { _, newState in
+            if newState == .connected {
+                durationSec = 0
+            }
+        }
+        .task(id: callManager.state) {
+            guard callManager.state == .connected else { return }
+            while !Task.isCancelled && callManager.state == .connected {
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                durationSec += 1
+            }
+        }
+    }
+
+    private func formatDuration(_ sec: Int) -> String {
+        let m = sec / 60
+        let s = sec % 60
+        return String(format: "%02d:%02d", m, s)
+    }
+}
