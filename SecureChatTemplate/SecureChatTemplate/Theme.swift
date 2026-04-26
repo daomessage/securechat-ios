@@ -74,7 +74,7 @@ let SuccessText = Color(red: 74/255, green: 222/255, blue: 128/255)
 /// color.status.warning amber-400
 let WarningColor = Color(red: 251/255, green: 191/255, blue: 36/255)
 
-// MARK: - Spacing Constants
+// MARK: - Spacing Constants (旧式 · 历史代码兼容)
 
 let Spacing2 = 2.0
 let Spacing4 = 4.0
@@ -88,6 +88,32 @@ let Spacing20 = 20.0
 let Spacing24 = 24.0
 let Spacing32 = 32.0
 let Spacing40 = 40.0
+
+// MARK: - Spacing 命名空间 (4px 网格, 对齐 Android Theme.kt 和 docs/DESIGN_TOKENS.md)
+//
+// 新代码用这个 (例: Spacing.s4 = 16pt). 老代码 Spacing16 等保留兼容.
+
+enum Spacing {
+    static let s0: CGFloat = 0
+    static let s1: CGFloat = 4
+    static let s2: CGFloat = 8
+    static let s3: CGFloat = 12
+    static let s4: CGFloat = 16
+    static let s5: CGFloat = 20
+    static let s6: CGFloat = 24
+    static let s8: CGFloat = 32
+    static let s10: CGFloat = 40
+}
+
+// MARK: - Elevation (对齐 Android)
+
+enum Elevation {
+    static let sm: CGFloat = 1
+    static let md: CGFloat = 3
+    static let lg: CGFloat = 6
+    static let xl: CGFloat = 8
+    static let xxl: CGFloat = 12
+}
 
 // MARK: - Radius Constants
 

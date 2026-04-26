@@ -36,13 +36,12 @@ struct NavigationView: View {
                 MainView(appState: appState)
             }
 
-            // 网络状态横幅（overlay）
+            // 网络状态横幅(overlay) — 显示在 safe area 下面, 不要遮挡状态栏
             if case .disconnected = appState.networkState {
                 VStack {
                     NetworkBanner(state: appState.networkState)
                     Spacer()
                 }
-                .ignoresSafeArea(edges: .top)
             }
 
             // 通话浮层（由 CallManager 自行管理显示/隐藏）

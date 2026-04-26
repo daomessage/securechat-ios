@@ -72,13 +72,45 @@ final class CallManager {
     var remoteVideoTrackForRender: RTCVideoTrack? { remoteVideoTrack }
     #endif
 
-    private let iceServers: [String] = ["stun:stun.l.google.com:19302"]
+    // ICE 配置 — 运行时从 /api/v1/calls/ice-config 动态拉取（Cloudflare Realtime TURN）
+    // 失败时降级为 Google 公共 STUN
+    private func fetchIceServers() async -> [RTCIceServer] {
+        // SDK fetchTurnConfig() 返回服务端下发的 iceServers 数组
+        if let turnConfig = try? await client.fetchTurnConfig() {
+            let servers: [RTCIceServer] = turnConfig.iceServers.compactMap { srv in
+                guard let urls = srv["urls"] as? [String], !urls.isEmpty else { return nil }
+                let username   = srv["username"]   as? String
+                let credential = srv["credential"] as? String
+                if let u = username, let c = credential {
+                    return RTCIceServer(urlStrings: urls, username: u, credential: c)
+                }
+                return RTCIceServer(urlStrings: urls)
+            }
+            if !servers.isEmpty {
+                return servers
+            }
+        }
+        // 降级：Google 公共 STUN
+        return [RTCIceServer(urlStrings: ["stun:stun.l.google.com:19302",
+                                          "stun:stun1.l.google.com:19302"])]
+    }
 
     // MARK: - Lifecycle
 
     func start() {
-        // SDK 暴露 onSignal 后在此订阅
-        // client.onSignal { [weak self] frame in self?.handleIncomingSignal(frame) }
+        // 订阅来自 SDK 的通话信令帧（call_invite / call_offer / call_answer / call_ice / call_hangup 等）
+        // start() 必须在 client.connect()（WS 建立）之后、且 UI 已准备好之前调用，
+        // 确保第一条来电帧到达时回调已注册。
+        // 对标 Android CallManager.start() / PWA App.tsx initCalls() 的信令注册时序。
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            _ = await client.on(SecureChatClient.EVENT_SIGNAL) { [weak self] frame in
+                guard let frame = frame as? [String: Any] else { return }
+                Task { @MainActor [weak self] in
+                    self?.handleIncomingSignal(frame)
+                }
+            }
+        }
     }
 
     // MARK: - Public API
@@ -91,9 +123,13 @@ final class CallManager {
         self.cameraMuted = false
 
         #if canImport(WebRTC)
-        setupPeer()
-        attachLocalMedia(mode: mode)
-        createOfferAndSend(mode: mode)
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            let servers = await self.fetchIceServers()
+            self.setupPeer(iceServerList: servers)
+            self.attachLocalMedia(mode: mode)
+            self.createOfferAndSend(mode: mode)
+        }
         #endif
 
         sendSignal(type: "call_invite", extras: ["mode": mode.rawValue])
@@ -115,13 +151,18 @@ final class CallManager {
         state = .connecting
 
         #if canImport(WebRTC)
-        setupPeer()
-        attachLocalMedia(mode: info.mode)
-        // remote offer 已在 incoming 时 setRemoteDescription
-        createAnswerAndSend()
-        #endif
-
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            let servers = await self.fetchIceServers()
+            self.setupPeer(iceServerList: servers)
+            self.attachLocalMedia(mode: info.mode)
+            // remote offer 已在 incoming 时 setRemoteDescription
+            self.createAnswerAndSend()
+            self.state = .connected
+        }
+        #else
         state = .connected
+        #endif
     }
 
     func reject() {
@@ -174,7 +215,13 @@ final class CallManager {
 
         case "call_offer":
             #if canImport(WebRTC)
-            if peer == nil { setupPeer() }
+            if peer == nil {
+                Task { @MainActor [weak self] in
+                    guard let self else { return }
+                    let servers = await self.fetchIceServers()
+                    self.setupPeer(iceServerList: servers)
+                }
+            }
             if let sdp = frame["sdp"] as? String {
                 let desc = RTCSessionDescription(type: .offer, sdp: sdp)
                 peer?.setRemoteDescription(desc, completionHandler: { [weak self] _ in
@@ -234,9 +281,9 @@ final class CallManager {
     }
 
     #if canImport(WebRTC)
-    private func setupPeer() {
+    private func setupPeer(iceServerList: [RTCIceServer]) {
         let config = RTCConfiguration()
-        config.iceServers = [RTCIceServer(urlStrings: iceServers)]
+        config.iceServers = iceServerList
         config.sdpSemantics = .unifiedPlan
         let constraints = RTCMediaConstraints(mandatoryConstraints: nil, optionalConstraints: nil)
         peer = Self.factory.peerConnection(with: config, constraints: constraints, delegate: PeerDelegate(manager: self))
@@ -291,7 +338,15 @@ final class CallManager {
     }
 
     private func createAnswerAndSend() {
-        let constraints = RTCMediaConstraints(mandatoryConstraints: nil, optionalConstraints: nil)
+        // 显式指定 OfferToReceiveVideo，确保视频来电被叫方协商出视频 track
+        let isVideo = info?.mode == .video
+        let constraints = RTCMediaConstraints(
+            mandatoryConstraints: [
+                "OfferToReceiveAudio": "true",
+                "OfferToReceiveVideo": isVideo ? "true" : "false",
+            ],
+            optionalConstraints: nil
+        )
         peer?.answer(for: constraints) { [weak self] sdp, _ in
             guard let self, let sdp else { return }
             self.peer?.setLocalDescription(sdp) { _ in }

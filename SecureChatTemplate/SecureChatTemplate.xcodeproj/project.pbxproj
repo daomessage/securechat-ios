@@ -30,6 +30,7 @@
 		50FC990AB7E054FEB8C80985 /* SetNicknameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3502F11383D95CF989A17351 /* SetNicknameView.swift */; };
 		99E56D0C940B50159AF2A6C6 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F9D7CBD2C75B7FA73940E8 /* SettingsView.swift */; };
 		6B6DCFFF60F95E0EBC0F2A4D /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C592FE68EF651159F58ECC2 /* Theme.swift */; };
+		AAAAAAAAAAAAAAAAAAAAAA01 /* Avatar.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAAAAAAAAAAAAAAAAA02 /* Avatar.swift */; };
 		AA272282017955F69E414434 /* VanityShopView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EECB01ED2EB5F8DB3652740 /* VanityShopView.swift */; };
 		B23711985B6E5C32818A3773 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1463DE944DCB5193B37F4C30 /* WelcomeView.swift */; };
 		F4BC6B1BED20A9D28AD0A073 /* CallManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51DC02FC145E926BF926C7D7 /* CallManager.swift */; };
@@ -83,6 +84,7 @@
 		3502F11383D95CF989A17351 /* SetNicknameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetNicknameView.swift; sourceTree = "<group>"; };
 		B5F9D7CBD2C75B7FA73940E8 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		8C592FE68EF651159F58ECC2 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		AAAAAAAAAAAAAAAAAAAAAA02 /* Avatar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components/Avatar.swift; sourceTree = "<group>"; };
 		7EECB01ED2EB5F8DB3652740 /* VanityShopView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VanityShopView.swift; sourceTree = "<group>"; };
 		1463DE944DCB5193B37F4C30 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
 		51DC02FC145E926BF926C7D7 /* CallManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallManager.swift; sourceTree = "<group>"; };
@@ -157,6 +159,7 @@
 				3502F11383D95CF989A17351 /* SetNicknameView.swift */,
 				B5F9D7CBD2C75B7FA73940E8 /* SettingsView.swift */,
 				8C592FE68EF651159F58ECC2 /* Theme.swift */,
+				AAAAAAAAAAAAAAAAAAAAAA02 /* Avatar.swift */,
 				7EECB01ED2EB5F8DB3652740 /* VanityShopView.swift */,
 				1463DE944DCB5193B37F4C30 /* WelcomeView.swift */,
 				51DC02FC145E926BF926C7D7 /* CallManager.swift */,
@@ -348,6 +351,7 @@
 				50FC990AB7E054FEB8C80985 /* SetNicknameView.swift in Sources */,
 				99E56D0C940B50159AF2A6C6 /* SettingsView.swift in Sources */,
 				6B6DCFFF60F95E0EBC0F2A4D /* Theme.swift in Sources */,
+				AAAAAAAAAAAAAAAAAAAAAA01 /* Avatar.swift in Sources */,
 				AA272282017955F69E414434 /* VanityShopView.swift in Sources */,
 				B23711985B6E5C32818A3773 /* WelcomeView.swift in Sources */,
 				F4BC6B1BED20A9D28AD0A073 /* CallManager.swift in Sources */,

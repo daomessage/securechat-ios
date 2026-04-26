@@ -280,10 +280,22 @@ struct VoiceMessagePlayer: View {
     @State private var player: AVAudioPlayer? = nil
 
     private var durationText: String {
-        if let cap = message.caption, let ms = Int(cap) {
+        // SDK 序列化 voice 消息为 JSON: {"type":"voice","key":"...","durationMs":N}
+        // 解析 msg.text 获取时长，兼容旧格式 "[voice]key|durationMs"
+        if let text = message.text,
+           let data = text.data(using: .utf8),
+           let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+           let ms = json["durationMs"] as? Int {
             return "\(ms / 1000)″"
         }
-        return "Voice"
+        // 旧格式兜底: [voice]key|durationMs
+        if let text = message.text, text.hasPrefix("[voice]") {
+            let parts = text.dropFirst("[voice]".count).split(separator: "|")
+            if parts.count >= 2, let ms = Int(parts[1]) {
+                return "\(ms / 1000)″"
+            }
+        }
+        return "语音"
     }
 
     var body: some View {

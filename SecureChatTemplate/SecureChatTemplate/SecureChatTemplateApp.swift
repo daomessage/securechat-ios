@@ -41,6 +41,12 @@ struct SecureChatTemplateApp: App {
                 // 建立 WebSocket 连接
                 await client.connect()
 
+                // CallManager 信令订阅必须在 WS 连接后立即注册，
+                // 确保第一条来电帧到达时 handleIncomingSignal 已绑定。
+                // 对标 Android AppNavigation callManager.start() 和
+                // PWA App.tsx 里 initCalls() 在 initIMClient() 之前完成。
+                await MainActor.run { CallManager.shared.start() }
+
                 // 设置 SDK 事件监听器
                 await setupSDKListeners(client)
 
